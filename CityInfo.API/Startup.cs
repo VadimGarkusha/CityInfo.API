@@ -1,7 +1,9 @@
-﻿using CityInfo.API.Services;
+﻿using CityInfo.API.Entities;
+using CityInfo.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,9 +16,15 @@ namespace CityInfo.API
 
         public static IConfiguration Configuration { get; private set; } 
 
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appSettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
+            Configuration = builder.Build();
+
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -31,6 +39,8 @@ namespace CityInfo.API
 #else
             services.AddTransient<IMailService, LocalMailService>();
 #endif
+            var connectionString = " ";
+            services.AddDbContext<CityInfoContext>(o => o.UseSqlServer(connectionString));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
